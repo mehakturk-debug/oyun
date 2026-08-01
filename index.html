@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Çizim Bil — Arkadaşlarla Online</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Crimson+Pro:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0B1F3A;
+    --navy-2:#132a4d;
+    --gold:#C9A24B;
+    --gold-2:#D4AF37;
+    --cream:#F3ECD8;
+    --ink:#1c2536;
+    --danger:#9c3b3b;
+    --ok:#3b7a4a;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;margin:0;}
+  body{
+    background:radial-gradient(1200px 800px at 50% -10%, var(--navy-2), var(--navy) 60%);
+    color:var(--cream);
+    font-family:'Crimson Pro', serif;
+    font-size:18px;
+    min-height:100%;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:24px 14px 60px;
+  }
+  h1,h2,h3, .brand{font-family:'Cinzel', serif; letter-spacing:.02em;}
+  .brand{
+    font-size:clamp(28px,5vw,42px);
+    color:var(--gold-2);
+    text-align:center;
+    margin:6px 0 2px;
+    text-shadow:0 2px 12px rgba(212,175,55,.25);
+  }
+  .brand small{display:block; font-family:'Crimson Pro',serif; font-size:15px; color:var(--cream); opacity:.65; letter-spacing:.04em; margin-top:4px;}
+  .card{
+    background:linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.02));
+    border:1px solid rgba(212,175,55,.28);
+    border-radius:16px;
+    padding:26px;
+    width:100%;
+    max-width:460px;
+    box-shadow:0 20px 50px rgba(0,0,0,.35);
+    backdrop-filter:blur(2px);
+  }
+  .wide{max-width:920px;}
+  label{display:block; font-size:14px; opacity:.75; margin:14px 0 6px; letter-spacing:.03em;}
+  input[type=text]{
+    width:100%; padding:12px 14px; border-radius:8px; border:1px solid rgba(212,175,55,.4);
+    background:rgba(243,236,216,.06); color:var(--cream); font-family:'Crimson Pro',serif; font-size:17px;
+  }
+  input[type=text]:focus{outline:2px solid var(--gold); outline-offset:1px;}
+  input[type=text]::placeholder{color:rgba(243,236,216,.4);}
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    background:linear-gradient(180deg, var(--gold-2), var(--gold));
+    color:var(--navy); border:none; border-radius:8px; padding:12px 18px;
+    font-family:'Cinzel', serif; font-size:14px; letter-spacing:.05em; font-weight:600;
+    cursor:pointer; transition:transform .12s ease, box-shadow .12s ease;
+  }
+  .btn:hover{transform:translateY(-1px); box-shadow:0 8px 20px rgba(212,175,55,.3);}
+  .btn:active{transform:translateY(0);}
+  .btn:disabled{opacity:.4; cursor:not-allowed; transform:none; box-shadow:none;}
+  .btn.ghost{background:transparent; color:var(--gold-2); border:1px solid rgba(212,175,55,.5);}
+  .btn.danger{background:linear-gradient(180deg,#b24d4d,#9c3b3b); color:#fff;}
+  .row{display:flex; gap:10px;}
+  .row > *{flex:1;}
+  .divider{display:flex; align-items:center; gap:12px; margin:24px 0; color:var(--gold); opacity:.6; font-family:'Cinzel',serif; font-size:12px; letter-spacing:.15em;}
+  .divider::before,.divider::after{content:""; flex:1; height:1px; background:linear-gradient(90deg, transparent, var(--gold), transparent);}
+  .hidden{display:none !important;}
+  .err{color:#e08a8a; font-size:14px; margin-top:8px; min-height:18px;}
+
+  /* Lobby / player list */
+  .players{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px;}
+  .players li{
+    display:flex; justify-content:space-between; align-items:center;
+    background:rgba(255,255,255,.04); border:1px solid rgba(212,175,55,.18);
+    border-radius:8px; padding:9px 14px; font-size:16px;
+  }
+  .players li.me{border-color:var(--gold-2);}
+  .tag{font-size:11px; font-family:'Cinzel',serif; letter-spacing:.05em; padding:2px 8px; border-radius:20px; background:rgba(212,175,55,.18); color:var(--gold-2);}
+  .roomcode{
+    font-family:'Cinzel',serif; letter-spacing:.25em; font-size:22px; text-align:center;
+    color:var(--gold-2); background:rgba(212,175,55,.08); border:1px dashed rgba(212,175,55,.5);
+    border-radius:10px; padding:10px; margin:10px 0 4px; cursor:pointer;
+  }
+  .hint{font-size:13px; opacity:.6; text-align:center;}
+
+  /* Game screen */
+  .game-wrap{display:grid; grid-template-columns:1fr 260px; gap:16px; width:100%; max-width:1040px;}
+  @media (max-width:760px){.game-wrap{grid-template-columns:1fr;}}
+  .panel{background:linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.02)); border:1px solid rgba(212,175,55,.28); border-radius:14px; padding:14px;}
+  .topbar{display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:10px; flex-wrap:wrap;}
+  .word-slot{font-family:'Cinzel',serif; font-size:22px; letter-spacing:.35em; color:var(--gold-2); text-align:center;}
+  .timer{font-family:'Cinzel',serif; font-size:20px; color:var(--gold-2); min-width:54px; text-align:center;}
+  .timer.low{color:#e08a8a;}
+  #canvasHolder{position:relative; width:100%; aspect-ratio:4/3; background:var(--cream); border-radius:10px; overflow:hidden; touch-action:none; border:1px solid rgba(212,175,55,.4);}
+  #board{width:100%; height:100%; display:block; cursor:crosshair;}
+  .toolbar{display:flex; align-items:center; gap:10px; margin-top:10px; flex-wrap:wrap;}
+  .swatches{display:flex; gap:6px;}
+  .swatch{width:26px; height:26px; border-radius:50%; border:2px solid rgba(255,255,255,.5); cursor:pointer;}
+  .swatch.active{outline:2px solid var(--gold-2); outline-offset:2px;}
+  input[type=range]{accent-color:var(--gold-2);}
+  .scoreboard{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px; max-height:220px; overflow:auto;}
+  .scoreboard li{display:flex; justify-content:space-between; background:rgba(255,255,255,.04); border-radius:6px; padding:7px 10px; font-size:15px;}
+  .scoreboard li .pts{color:var(--gold-2); font-family:'Cinzel',serif;}
+  .drawer-flag{font-size:12px; color:var(--gold-2);}
+  #chatLog{list-style:none; margin:0; padding:0; height:220px; overflow-y:auto; display:flex; flex-direction:column; gap:5px; font-size:15px;}
+  #chatLog li{padding:5px 9px; border-radius:6px; background:rgba(255,255,255,.03);}
+  #chatLog li.correct{background:rgba(59,122,74,.35); color:#cdeed4;}
+  #chatLog li .who{color:var(--gold-2); font-weight:600;}
+  #guessForm{display:flex; gap:8px; margin-top:8px;}
+  #guessInput{flex:1;}
+  .center-msg{text-align:center; font-family:'Cinzel',serif; color:var(--gold-2); padding:20px 0;}
+  footer{opacity:.4; font-size:12px; margin-top:26px; text-align:center;}
+</style>
+</head>
+<body>
+
+<div class="brand">Çizim Bil<small>arkadaşlarınla gerçek zamanlı çizim &amp; tahmin oyunu</small></div>
+
+<!-- LANDING -->
+<div id="screenLanding" class="card">
+  <label for="nameInput">Adın</label>
+  <input type="text" id="nameInput" maxlength="16" placeholder="ör. Mehmet">
+
+  <div class="divider">ODA</div>
+
+  <button class="btn" id="createBtn" style="width:100%;">Yeni Oda Kur</button>
+
+  <div class="row" style="margin-top:14px;">
+    <input type="text" id="joinCodeInput" maxlength="5" placeholder="ODA KODU" style="text-transform:uppercase; letter-spacing:.2em; text-align:center;">
+    <button class="btn ghost" id="joinBtn">Katıl</button>
+  </div>
+  <div class="err" id="landingErr"></div>
+</div>
+
+<!-- LOBBY -->
+<div id="screenLobby" class="card hidden">
+  <h2 style="margin:0 0 4px; text-align:center;">Oda</h2>
+  <div class="roomcode" id="roomCodeDisplay" title="Kopyalamak için tıkla"></div>
+  <div class="hint">Bu kodu arkadaşlarına gönder</div>
+  <div class="divider">OYUNCULAR</div>
+  <ul class="players" id="lobbyPlayers"></ul>
+  <div style="margin-top:18px; text-align:center;">
+    <button class="btn" id="startBtn">Oyunu Başlat</button>
+    <div class="hint" id="lobbyHint" style="margin-top:8px;">En az 2 oyuncu gerekir</div>
+  </div>
+</div>
+
+<!-- GAME -->
+<div id="screenGame" class="game-wrap hidden">
+  <div class="panel">
+    <div class="topbar">
+      <div id="turnInfo" style="font-family:'Cinzel',serif; font-size:14px; color:var(--gold-2);"></div>
+      <div class="word-slot" id="wordSlot">— — — —</div>
+      <div class="timer" id="timerDisplay">60</div>
+    </div>
+    <div id="canvasHolder">
+      <canvas id="board"></canvas>
+    </div>
+    <div class="toolbar" id="drawTools">
+      <div class="swatches" id="swatches"></div>
+      <input type="range" id="brushSize" min="2" max="24" value="6">
+      <button class="btn ghost" id="undoBtn">Geri Al</button>
+      <button class="btn danger" id="clearBtn">Temizle</button>
+    </div>
+    <div id="wordChoicePanel" class="hidden" style="margin-top:10px; text-align:center;">
+      <div class="hint" style="margin-bottom:8px;">Çizeceğin kelimeyi seç:</div>
+      <div id="wordChoices" style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;"></div>
+    </div>
+  </div>
+
+  <div class="panel" style="display:flex; flex-direction:column; gap:14px;">
+    <div>
+      <h3 style="margin:0 0 8px;">Skor Tablosu</h3>
+      <ul class="scoreboard" id="scoreboard"></ul>
+    </div>
+    <div style="flex:1; display:flex; flex-direction:column;">
+      <h3 style="margin:0 0 8px;">Sohbet / Tahmin</h3>
+      <ul id="chatLog"></ul>
+      <form id="guessForm">
+        <input type="text" id="guessInput" maxlength="40" placeholder="Tahminini yaz...">
+        <button class="btn" type="submit">Gönder</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<footer id="setupHint">Firebase yapılandırmasını dosyanın en altındaki firebaseConfig alanına ekle.</footer>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+/* =========================================================
+   1) FIREBASE YAPILANDIRMASI — kendi projenin bilgilerini gir
+   (Açık Artırma 11 projendeki Firebase projesini de kullanabilirsin,
+   bu oyun kendi "cizimTahmin/" kökü altında ayrı veri tutuyor,
+   çakışma olmaz.)
+   ========================================================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyBpV1c6faxN4DAuHaPcGA-Bh7Bvcm7lweM",
+  authDomain: "oyun-89d99.firebaseapp.com",
+  databaseURL: "https://oyun-89d99-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "oyun-89d99",
+  storageBucket: "oyun-89d99.firebasestorage.app",
+  messagingSenderId: "1016687931704",
+  appId: "1:1016687931704:web:1afe69b38a7fd19f1791cd"
+};
+
+if(String(firebaseConfig.apiKey).includes("BURAYA")){
+  window.addEventListener('load', ()=>{
+    document.getElementById('landingErr').textContent =
+      "firebaseConfig hâlâ örnek değerlerde duruyor — dosyanın altındaki firebaseConfig alanını kendi Firebase projenin bilgileriyle doldurman gerekiyor.";
+  });
+}
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const ROOT = "cizimTahmin"; // bu oyunun kök dizini
+
+/* =========================================================
+   2) KELİME HAVUZU (genel kategori)
+   ========================================================= */
+const WORD_POOL = [
+  "elma","kedi","köpek","güneş","ay","yıldız","deniz","dağ","ağaç","çiçek",
+  "araba","bisiklet","uçak","gemi","tren","ev","köprü","kale","gitar","piyano",
+  "kitap","kalem","saat","gözlük","şemsiye","anahtar","kapı","pencere","merdiven","masa",
+  "sandalye","bardak","çanta","ayakkabı","şapka","balık","kuş","aslan","fil","zürafa",
+  "tavşan","kelebek","arı","örümcek","yılan","kaplumbağa","pizza","hamburger","dondurma","pasta",
+  "kahve","çay","ekmek","peynir","karpuz","muz","çilek","limon","havuç","patates",
+  "futbol topu","basketbol potası","kar tanesi","yağmur","gökkuşağı","şimşek","volkan","robot","uzay gemisi","gezegen",
+  "hayalet","cadı","ejderha","şato","hazine sandığı","harita","pusula","fener","mum","ateş",
+  "buz","dalgıç","denizaltı","balon","uçurtma","salıncak","kaydırak","tekerlekli sandalye","bebek arabası","ayna"
+];
+function pickWords(n=3){
+  const shuffled=[...WORD_POOL].sort(()=>Math.random()-0.5);
+  return shuffled.slice(0,n);
+}
+
+/* =========================================================
+   3) DURUM
+   ========================================================= */
+let myId = null, myName = "", roomId = null, isHost = false;
+let roomRef = null, playersRef = null, gameRef = null, strokesRef = null, chatRef = null;
+let players = {}; // uid -> {name, score}
+let currentDrawer = null, currentWord = null, roundEndAt = null, roundActive = false;
+let timerInterval = null;
+let localGuessedCorrect = false;
+
+// canvas
+let drawing = false, lastX=0, lastY=0, myColor="#1c2536", myBrush=6;
+const strokeHistory = []; // {id}
+
+/* =========================================================
+   4) YARDIMCI
+   ========================================================= */
+const $ = (id)=>document.getElementById(id);
+function show(id){ $(id).classList.remove('hidden'); }
+function hide(id){ $(id).classList.add('hidden'); }
+function genRoomCode(){
+  const chars="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let s=""; for(let i=0;i<4;i++) s+=chars[Math.floor(Math.random()*chars.length)];
+  return s;
+}
+function genId(){ return 'p'+Math.random().toString(36).slice(2,10); }
+
+/* =========================================================
+   5) ODA KURMA / KATILMA
+   ========================================================= */
+$('createBtn').onclick = async ()=>{
+  const name = $('nameInput').value.trim();
+  if(!name){ $('landingErr').textContent="Önce adını yaz."; return; }
+  $('landingErr').textContent="";
+  $('createBtn').disabled = true;
+  try{
+    myName = name; myId = genId();
+    roomId = genRoomCode();
+    isHost = true;
+    await db.ref(`${ROOT}/rooms/${roomId}`).set({
+      createdAt: Date.now(),
+      hostId: myId,
+      status: "lobby",
+      players: { [myId]: { name: myName, score:0, joinedAt: Date.now() } }
+    });
+    enterRoom();
+  }catch(err){
+    console.error(err);
+    $('landingErr').textContent = "Oda kurulamadı: " + (err.message || err);
+  }finally{
+    $('createBtn').disabled = false;
+  }
+};
+
+$('joinBtn').onclick = async ()=>{
+  const name = $('nameInput').value.trim();
+  const code = $('joinCodeInput').value.trim().toUpperCase();
+  if(!name){ $('landingErr').textContent="Önce adını yaz."; return; }
+  if(!code){ $('landingErr').textContent="Oda kodu gir."; return; }
+  $('landingErr').textContent="";
+  $('joinBtn').disabled = true;
+  try{
+    const snap = await db.ref(`${ROOT}/rooms/${code}`).get();
+    if(!snap.exists()){ $('landingErr').textContent="Böyle bir oda bulunamadı."; return; }
+    myName = name; myId = genId(); roomId = code; isHost=false;
+    await db.ref(`${ROOT}/rooms/${roomId}/players/${myId}`).set({name:myName, score:0, joinedAt:Date.now()});
+    enterRoom();
+  }catch(err){
+    console.error(err);
+    $('landingErr').textContent = "Odaya katılınamadı: " + (err.message || err);
+  }finally{
+    $('joinBtn').disabled = false;
+  }
+};
+
+function enterRoom(){
+  hide('screenLanding'); show('screenLobby');
+  $('roomCodeDisplay').textContent = roomId;
+  roomRef = db.ref(`${ROOT}/rooms/${roomId}`);
+  playersRef = roomRef.child('players');
+  gameRef = roomRef.child('game');
+  strokesRef = roomRef.child('strokes');
+  chatRef = roomRef.child('chat');
+
+  // odadan biri ayrılırsa temizle
+  db.ref(`${ROOT}/rooms/${roomId}/players/${myId}`).onDisconnect().remove();
+
+  playersRef.on('value', snap=>{
+    players = snap.val() || {};
+    renderLobbyPlayers();
+    renderScoreboard();
+  });
+
+  roomRef.child('status').on('value', snap=>{
+    const status = snap.val();
+    if(status==='playing'){ hide('screenLobby'); show('screenGame'); }
+    if(status==='lobby'){ hide('screenGame'); show('screenLobby'); }
+  });
+
+  gameRef.on('value', snap=> onGameStateChange(snap.val()));
+  strokesRef.on('child_added', snap=> drawIncomingStroke(snap.val()));
+  strokesRef.on('value', snap=>{ if(!snap.exists()) clearCanvasLocal(); });
+  chatRef.on('child_added', snap=> renderChatEntry(snap.val()));
+}
+
+$('roomCodeDisplay').onclick = ()=>{
+  navigator.clipboard?.writeText(roomId);
+};
+
+function renderLobbyPlayers(){
+  const ul = $('lobbyPlayers'); ul.innerHTML='';
+  Object.entries(players).forEach(([uid,p])=>{
+    const li=document.createElement('li');
+    if(uid===myId) li.classList.add('me');
+    li.innerHTML = `<span>${escapeHtml(p.name)}</span>` + (uid===myId?'<span class="tag">SEN</span>':'');
+    ul.appendChild(li);
+  });
+  const count = Object.keys(players).length;
+  $('startBtn').style.display = isHost ? 'inline-flex':'none';
+  $('startBtn').disabled = count<2;
+  $('lobbyHint').textContent = isHost ? (count<2 ? 'En az 2 oyuncu gerekir' : 'Başlamaya hazır!') : 'Oda sahibinin başlatmasını bekle';
+}
+
+/* =========================================================
+   6) OYUN AKIŞI
+   ========================================================= */
+$('startBtn').onclick = async ()=>{
+  const order = Object.keys(players);
+  await roomRef.child('status').set('playing');
+  await gameRef.set({ order, turnIndex:0, round:1 });
+  startTurn(order[0]);
+};
+
+async function startTurn(drawerId){
+  await strokesRef.remove();
+  await gameRef.update({ phase:'choosing', drawerId, word:null, endsAt:null });
+}
+
+function onGameStateChange(state){
+  if(!state) return;
+  currentDrawer = state.drawerId;
+  currentWord = state.word;
+  roundEndAt = state.endsAt;
+  const amDrawer = currentDrawer===myId;
+
+  $('turnInfo').textContent = amDrawer ? "Sen çiziyorsun!" : `Çizen: ${players[currentDrawer]?.name || '...'}`;
+
+  if(state.phase==='choosing'){
+    roundActive=false;
+    $('wordSlot').textContent = '';
+    if(amDrawer){
+      show('wordChoicePanel');
+      if(!$('wordChoices').dataset.filled){
+        renderWordChoices();
+      }
+    } else {
+      hide('wordChoicePanel');
+      $('wordSlot').textContent = 'Kelime seçiliyor...';
+    }
+    setDrawEnabled(false);
+  }
+
+  if(state.phase==='drawing'){
+    hide('wordChoicePanel');
+    $('wordChoices').dataset.filled='';
+    localGuessedCorrect = amDrawer;
+    roundActive = true;
+    setDrawEnabled(amDrawer);
+    updateWordSlot(amDrawer);
+    startTimer(state.endsAt);
+  }
+
+  if(state.phase==='reveal'){
+    roundActive=false;
+    setDrawEnabled(false);
+    clearInterval(timerInterval);
+    $('wordSlot').textContent = `Kelime: ${state.word || ''}`;
+    if(isHost) scheduleNextTurn(state);
+  }
+}
+
+function renderWordChoices(){
+  const words = pickWords(3);
+  const box = $('wordChoices'); box.innerHTML='';
+  box.dataset.filled='1';
+  words.forEach(w=>{
+    const b=document.createElement('button');
+    b.className='btn ghost'; b.textContent=w;
+    b.onclick = async ()=>{
+      const endsAt = Date.now()+60000;
+      await gameRef.update({ phase:'drawing', word:w, endsAt });
+    };
+    box.appendChild(b);
+  });
+}
+
+function updateWordSlot(amDrawer){
+  if(!currentWord){ $('wordSlot').textContent=''; return; }
+  if(amDrawer){
+    $('wordSlot').textContent = currentWord;
+  } else {
+    $('wordSlot').textContent = currentWord.split('').map(c=> c===' ' ? '  ' : '_').join(' ');
+  }
+}
+
+function startTimer(endsAt){
+  clearInterval(timerInterval);
+  timerInterval = setInterval(()=>{
+    const remain = Math.max(0, Math.round((endsAt - Date.now())/1000));
+    $('timerDisplay').textContent = remain;
+    $('timerDisplay').classList.toggle('low', remain<=10);
+    if(remain<=0){
+      clearInterval(timerInterval);
+      if(isHost) endRound();
+    }
+  }, 250);
+}
+
+async function endRound(){
+  const snap = await gameRef.get();
+  const state = snap.val();
+  if(!state || state.phase==='reveal') return;
+  await gameRef.update({ phase:'reveal' });
+}
+
+async function scheduleNextTurn(state){
+  setTimeout(async ()=>{
+    const order = state.order;
+    let nextIndex = (state.turnIndex+1) % order.length;
+    let round = state.round + (nextIndex===0 ? 1 : 0);
+    await gameRef.update({ turnIndex: nextIndex, round });
+    startTurn(order[nextIndex]);
+  }, 3500);
+}
+
+/* =========================================================
+   7) ÇİZİM (CANVAS)
+   ========================================================= */
+const canvas = $('board');
+const ctx = canvas.getContext('2d');
+function resizeCanvas(){
+  const holder = $('canvasHolder');
+  const ratio = window.devicePixelRatio || 1;
+  canvas.width = holder.clientWidth*ratio;
+  canvas.height = holder.clientHeight*ratio;
+  ctx.scale(ratio,ratio);
+  ctx.lineCap='round'; ctx.lineJoin='round';
+  redrawAll();
+}
+window.addEventListener('resize', ()=>{ 
+  ctx.setTransform(1,0,0,1,0,0);
+  resizeCanvas(); 
+});
+
+const COLORS = ["#1c2536","#9c3b3b","#3b7a4a","#1d5fa8","#C9A24B","#7a3b9c","#e0e0e0","#ffffff"];
+function buildSwatches(){
+  const box=$('swatches'); box.innerHTML='';
+  COLORS.forEach((c,i)=>{
+    const s=document.createElement('div');
+    s.className='swatch'+(i===0?' active':'');
+    s.style.background=c;
+    s.onclick=()=>{ myColor=c; [...box.children].forEach(x=>x.classList.remove('active')); s.classList.add('active'); };
+    box.appendChild(s);
+  });
+}
+buildSwatches();
+$('brushSize').oninput = (e)=>{ myBrush = +e.target.value; };
+
+function setDrawEnabled(enabled){
+  canvas.style.cursor = enabled ? 'crosshair':'default';
+  $('drawTools').style.opacity = enabled ? '1':'.35';
+  $('drawTools').style.pointerEvents = enabled ? 'auto':'none';
+  canvas.dataset.enabled = enabled ? '1':'';
+}
+
+function getPos(e){
+  const rect = canvas.getBoundingClientRect();
+  const t = e.touches ? e.touches[0] : e;
+  return { x:(t.clientX-rect.left), y:(t.clientY-rect.top) };
+}
+function startDraw(e){
+  if(canvas.dataset.enabled!=='1') return;
+  drawing=true; const p=getPos(e); lastX=p.x; lastY=p.y;
+}
+function moveDraw(e){
+  if(!drawing) return;
+  e.preventDefault();
+  const p=getPos(e);
+  const seg = {x1:lastX,y1:lastY,x2:p.x,y2:p.y,color:myColor,size:myBrush};
+  drawSeg(seg);
+  strokesRef.push(seg);
+  lastX=p.x; lastY=p.y;
+}
+function endDraw(){ drawing=false; }
+canvas.addEventListener('mousedown', startDraw);
+canvas.addEventListener('mousemove', moveDraw);
+window.addEventListener('mouseup', endDraw);
+canvas.addEventListener('touchstart', startDraw, {passive:false});
+canvas.addEventListener('touchmove', moveDraw, {passive:false});
+canvas.addEventListener('touchend', endDraw);
+
+function drawSeg(seg){
+  ctx.strokeStyle=seg.color; ctx.lineWidth=seg.size;
+  ctx.beginPath(); ctx.moveTo(seg.x1,seg.y1); ctx.lineTo(seg.x2,seg.y2); ctx.stroke();
+}
+function drawIncomingStroke(seg){
+  strokeHistory.push(seg);
+  drawSeg(seg);
+}
+function redrawAll(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  strokeHistory.forEach(drawSeg);
+}
+function clearCanvasLocal(){
+  strokeHistory.length=0;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+}
+$('clearBtn').onclick = ()=>{ if(canvas.dataset.enabled==='1') strokesRef.remove(); };
+$('undoBtn').onclick = async ()=>{
+  if(canvas.dataset.enabled!=='1') return;
+  const snap = await strokesRef.limitToLast(1).get();
+  snap.forEach(child=> child.ref.remove());
+};
+
+/* =========================================================
+   8) SOHBET / TAHMİN
+   ========================================================= */
+$('guessForm').onsubmit = async (e)=>{
+  e.preventDefault();
+  const val = $('guessInput').value.trim();
+  $('guessInput').value='';
+  if(!val) return;
+
+  if(currentDrawer===myId){
+    chatRef.push({who:myName, uid:myId, text:val, correct:false, drawerMsg:true});
+    return;
+  }
+  if(localGuessedCorrect || !roundActive){
+    chatRef.push({who:myName, uid:myId, text:val, correct:false});
+    return;
+  }
+  const isCorrect = currentWord && val.trim().toLocaleLowerCase('tr') === currentWord.toLocaleLowerCase('tr');
+  if(isCorrect){
+    localGuessedCorrect = true;
+    const remain = Math.max(1, Math.round((roundEndAt-Date.now())/1000));
+    const points = 50 + remain*3;
+    chatRef.push({who:myName, uid:myId, text:"kelimeyi bildi! 🎉", correct:true});
+    playersRef.child(myId).child('score').transaction(s=> (s||0)+points);
+    playersRef.child(currentDrawer).child('score').transaction(s=> (s||0)+15);
+  } else {
+    chatRef.push({who:myName, uid:myId, text:val, correct:false});
+  }
+};
+
+function renderChatEntry(msg){
+  const li=document.createElement('li');
+  if(msg.correct) li.classList.add('correct');
+  li.innerHTML = `<span class="who">${escapeHtml(msg.who)}:</span> ${msg.correct ? 'kelimeyi bildi! 🎉' : escapeHtml(msg.text)}`;
+  const log=$('chatLog');
+  log.appendChild(li);
+  log.scrollTop = log.scrollHeight;
+}
+
+/* =========================================================
+   9) SKOR TABLOSU
+   ========================================================= */
+function renderScoreboard(){
+  const ul=$('scoreboard'); ul.innerHTML='';
+  const arr = Object.entries(players).map(([uid,p])=>({uid, name:p.name, score:p.score||0}));
+  arr.sort((a,b)=>b.score-a.score);
+  arr.forEach(p=>{
+    const li=document.createElement('li');
+    li.innerHTML = `<span>${escapeHtml(p.name)} ${p.uid===currentDrawer?'<span class="drawer-flag">✏️</span>':''}</span><span class="pts">${p.score}</span>`;
+    ul.appendChild(li);
+  });
+}
+
+function escapeHtml(s){
+  return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* init */
+window.addEventListener('load', resizeCanvas);
+</script>
+</body>
+</html>
